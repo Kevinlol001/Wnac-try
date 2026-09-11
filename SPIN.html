@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Machine</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="header-nav">
+        <button class="btn-back-hub" id="btn-back-hub" onclick="goToHub()">⬅ Torna all'Hub</button>
+        <div class="user-badge" id="user-display-name">Caricamento...</div>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="side-column">
+            <div class="paytable-container">
+                <div class="widget-title">
+                    <span>Tabella Simboli</span>
+                    <span style="font-size: 0.7rem; color: #888888; font-weight: normal;">Moltiplicatori</span>
+                </div>
+
+                <div class="paytable-list">
+                    <div class="paytable-row">
+                        <div class="paytable-icon">🍒</div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Base</span>
+                            <span class="paytable-mult">x1.2</span>
+                        </div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Jackpot</span>
+                            <span class="paytable-mult jackpot">x8</span>
+                        </div>
+                    </div>
+
+                    <div class="paytable-row">
+                        <div class="paytable-icon">🍋</div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Base</span>
+                            <span class="paytable-mult">x1.5</span>
+                        </div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Jackpot</span>
+                            <span class="paytable-mult jackpot">x15</span>
+                        </div>
+                    </div>
+
+                    <div class="paytable-row">
+                        <div class="paytable-icon">🍇</div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Base</span>
+                            <span class="paytable-mult">x2.0</span>
+                        </div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Jackpot</span>
+                            <span class="paytable-mult jackpot">x30</span>
+                        </div>
+                    </div>
+
+                    <div class="paytable-row">
+                        <div class="paytable-icon">🔔</div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Base</span>
+                            <span class="paytable-mult">x3.0</span>
+                        </div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Jackpot</span>
+                            <span class="paytable-mult jackpot">x80</span>
+                        </div>
+                    </div>
+
+                    <div class="paytable-row">
+                        <div class="paytable-icon">⭐</div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Base</span>
+                            <span class="paytable-mult">x5.0</span>
+                        </div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Jackpot</span>
+                            <span class="paytable-mult jackpot">x200</span>
+                        </div>
+                    </div>
+
+                    <div class="paytable-row">
+                        <div class="paytable-icon">💎</div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Base</span>
+                            <span class="paytable-mult">x10.0</span>
+                        </div>
+                        <div class="paytable-info">
+                            <span class="paytable-label">Jackpot</span>
+                            <span class="paytable-mult jackpot">x1000</span>
+                        </div>
+                        <div class="paytable-badge-effect">★ Jackpot REGALA +1 SPIN GRATIS</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reels-selector-container">
+                <div class="widget-title">
+                    <span>Modalità Rulli</span>
+                    <span style="font-size: 0.7rem; color: #888888; font-weight: normal;">Puntata</span>
+                </div>
+                <div class="reels-grid">
+                    <button class="btn-reel-opt active" id="reel-opt-3" onclick="setReelCount(3)">
+                        3 RULLI
+                        <span class="subtext">Base 10€</span>
+                    </button>
+                    <button class="btn-reel-opt" id="reel-opt-6" onclick="setReelCount(6)">
+                        6 RULLI
+                        <span class="subtext">Base 20€</span>
+                    </button>
+                    <button class="btn-reel-opt" id="reel-opt-10" onclick="setReelCount(10)">
+                        10 RULLI
+                        <span class="subtext">Base 50€</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="slot-container">
+            <div class="stats-box">
+                <div class="stat-item-balance">
+                    <span class="stat-label">
+                        Saldo
+                        <span class="free-spin-badge" id="free-spin-badge">0 FREE</span>
+                    </span>
+                    <div class="balance-digits-container" id="balance-digits-container"></div>
+                </div>
+            </div>
+
+            <div class="slot-display" id="slot-display"></div>
+
+            <div class="result-banner" id="result-banner">Buona fortuna! Premi GIRA per iniziare</div>
+
+            <div class="multiplier-section">
+                <span class="multiplier-title" id="multiplier-title">Moltiplicatore (Puntata Base 10€)</span>
+                <div class="multiplier-grid">
+                    <button class="btn-mult active" onclick="setMultiplier(1)" id="m-1">x1</button>
+                    <button class="btn-mult" onclick="setMultiplier(2)" id="m-2">x2</button>
+                    <button class="btn-mult" onclick="setMultiplier(4)" id="m-4">x4</button>
+                    <button class="btn-mult" onclick="setMultiplier(8)" id="m-8">x8</button>
+                </div>
+            </div>
+
+            <div class="controls-grid">
+                <button class="btn-spin" id="spin-btn" onclick="startSpin()">GIRA (10€)</button>
+                <button class="btn-auto" id="auto-btn" onclick="toggleAutoSpin()">AUTO: OFF</button>
+            </div>
+
+            <div class="history-section">
+                <span class="history-title">Ultime Giocate</span>
+                <div class="history-list" id="history-list">
+                    <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
+                    <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
+                    <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
+                    <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
+                    <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-column">
+            <div class="stats-panel-container">
+                <div class="widget-title">
+                    <span>📊 Statistiche</span>
+                    <span style="font-size: 0.65rem; color: #888888; font-weight: normal;">Sessione Corrente</span>
+                </div>
+
+                <div class="stats-grid-2x2">
+                    <div class="stat-card">
+                        <span class="stat-card-label">⏱️ Tempo</span>
+                        <span class="stat-card-value" id="stat-time">00:00:00</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-label">🎰 Spin Totali</span>
+                        <span class="stat-card-value" id="stat-spins">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-label">🏆 Max Vincita</span>
+                        <span class="stat-card-value gold" id="stat-max-win">0.00 €</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-label">📈 Win Rate</span>
+                        <span class="stat-card-value highlight" id="stat-winrate">0.0 %</span>
+                    </div>
+                </div>
+
+                <div class="chart-box">
+                    <div class="chart-header">
+                        <span>Andamento Saldo</span>
+                        <span>Ultimi 30 Giri</span>
+                    </div>
+                    <svg class="chart-svg" viewBox="0 0 280 70" id="balance-chart">
+                        <polyline fill="none" stroke="#2ecc71" stroke-width="2" points="0,35 280,35" id="chart-polyline"/>
+                    </svg>
+                </div>
+
+                <button class="btn-reset-session" onclick="resetSession()" id="btn-reset-session">
+                    🔄 RESET SESSIONE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://utbwqhtaiiexhxxwcjbh.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0YndxaHRhaWlleGh4eHdjamJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTU2ODEsImV4cCI6MjEwNDUzMTY4MX0.BRYmOwZ5k5imIymado1JPNRcHdvpmvmkhkXcU-OwbMs";
+
+        const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+        let currentUser = null;
+        let balance = 0.0;
+        let userSpinsCount = 0;
+        let displayedString = "";
+        let freeSpins = 0;
+        let isSpinning = false;
+        let isAutoSpin = false;
+        let currentMultiplier = 1;
+        let activeReelsCount = 3;
+        let baseBet = 10;
+        let history = [];
+
+        let totalSpins = 0;
+        let totalWinsCount = 0;
+        let maxWin = 0;
+        let sessionSeconds = 0;
+        let timerInterval = null;
+        let balanceHistory = [];
+
+        const SYMBOLS = ['🍒', '🍋', '🍇', '🔔', '⭐', '💎'];
+        const SYMBOL_HEIGHT = 100;
+
+        const PAYTABLE = {
+            '🍒': { base: 1.2, jackpot: 8 },
+            '🍋': { base: 1.5, jackpot: 15 },
+            '🍇': { base: 2.0, jackpot: 30 },
+            '🔔': { base: 3.0, jackpot: 80 },
+            '⭐': { base: 5.0, jackpot: 200 },
+            '💎': { base: 10.0, jackpot: 1000, freeSpin: true }
+        };
+
+        async function initUserSession() {
+            const sessionToken = localStorage.getItem('arcade_session');
+
+            if (!sessionToken) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('utenti')
+                    .select('username, saldo, spin, session_token')
+                    .eq('session_token', sessionToken)
+                    .maybeSingle();
+
+                if (error || !data) {
+                    localStorage.removeItem('arcade_session');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                currentUser = data;
+                balance = parseFloat(data.saldo || 0);
+                userSpinsCount = parseInt(data.spin || 0, 10);
+                balanceHistory = [balance];
+
+                const userDisplay = document.getElementById('user-display-name');
+                if (userDisplay) {
+                    userDisplay.innerText = `👤 ${currentUser.username} | 💰 ${balance.toFixed(2)}€`;
+                }
+
+                updateBalanceDigits(balance.toFixed(2) + ' €', true);
+            } catch (err) {
+                console.error("Errore sessione:", err);
+            }
+        }
+
+        async function syncUserData(newBalance, newSpinCount) {
+            if (!currentUser || !currentUser.username) return;
+
+            balance = newBalance;
+            userSpinsCount = newSpinCount;
+
+            const userDisplay = document.getElementById('user-display-name');
+            if (userDisplay) {
+                userDisplay.innerText = `👤 ${currentUser.username} | 💰 ${balance.toFixed(2)}€`;
+            }
+
+            try {
+                await supabaseClient
+                    .from('utenti')
+                    .update({ 
+                        saldo: balance,
+                        spin: parseInt(userSpinsCount, 10) || 0
+                    })
+                    .eq('username', currentUser.username);
+            } catch (err) {
+                console.error("Errore aggiornamento Supabase:", err);
+            }
+        }
+
+        function goToHub() { window.location.href = 'index.html'; }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                sessionSeconds++;
+                const hrs = String(Math.floor(sessionSeconds / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((sessionSeconds % 3600) / 60)).padStart(2, '0');
+                const secs = String(sessionSeconds % 60).padStart(2, '0');
+                const statTime = document.getElementById('stat-time');
+                if (statTime) statTime.innerText = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function updateChart() {
+            const polyline = document.getElementById('chart-polyline');
+            if (!polyline) return;
+            const data = balanceHistory.slice(-30);
+
+            if (data.length < 2) {
+                polyline.setAttribute('points', '0,35 280,35');
+                return;
+            }
+
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = (max - min) === 0 ? 1 : (max - min);
+
+            const width = 280;
+            const height = 60;
+            const step = width / (data.length - 1);
+
+            let points = [];
+            for (let i = 0; i < data.length; i++) {
+                const x = (i * step).toFixed(1);
+                const normY = (data[i] - min) / range;
+                const y = (height - (normY * height) + 5).toFixed(1);
+                points.push(`${x},${y}`);
+            }
+
+            polyline.setAttribute('points', points.join(' '));
+        }
+
+        function clearReelHighlights() {
+            document.querySelectorAll('.reel-window').forEach(reel => {
+                reel.classList.remove('win-highlight', 'jackpot-highlight');
+            });
+        }
+
+        function resetSession() {
+            if (isSpinning) return;
+
+            freeSpins = 0;
+            totalSpins = 0;
+            totalWinsCount = 0;
+            maxWin = 0;
+            sessionSeconds = 0;
+            history = [];
+            balanceHistory = [balance];
+
+            if (isAutoSpin) toggleAutoSpin();
+
+            document.getElementById('stat-spins').innerText = '0';
+            document.getElementById('stat-max-win').innerText = '0.00 €';
+            document.getElementById('stat-winrate').innerText = '0.0 %';
+            
+            const resultBanner = document.getElementById('result-banner');
+            resultBanner.innerText = "Sessione resettata! Buona fortuna!";
+            resultBanner.className = "result-banner";
+
+            clearReelHighlights();
+            updateHistory([], 0);
+            updateBalanceDigits(balance.toFixed(2) + ' €', true);
+            updateChart();
+            updateUI();
+        }
+
+        function setReelCount(count) {
+            if (isSpinning) return;
+
+            activeReelsCount = count;
+            if (count === 3) baseBet = 10;
+            else if (count === 6) baseBet = 20;
+            else if (count === 10) baseBet = 50;
+
+            document.querySelectorAll('.btn-reel-opt').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`reel-opt-${count}`).classList.add('active');
+
+            initReels();
+            updateUI();
+        }
+
+        function initReels() {
+            const display = document.getElementById('slot-display');
+            if (!display) return;
+            display.innerHTML = '';
+
+            for (let id = 1; id <= activeReelsCount; id++) {
+                const reelWindow = document.createElement('div');
+                reelWindow.className = 'reel-window';
+                reelWindow.id = `reel-window-${id}`;
+
+                const reelStrip = document.createElement('div');
+                reelStrip.className = 'reel-strip';
+                reelStrip.id = `reel-${id}`;
+
+                const initialSymbols = ['💎', '🍒', '🍋', '🍇', '🔔'];
+                for (let i = 0; i < initialSymbols.length; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'reel-symbol';
+                    div.innerText = initialSymbols[i];
+                    reelStrip.appendChild(div);
+                }
+
+                reelWindow.appendChild(reelStrip);
+                display.appendChild(reelWindow);
+            }
+
+            updateBalanceDigits(balance.toFixed(2) + ' €', true);
+            updateUI();
+        }
+
+        function updateBalanceDigits(newString, forceReset = false) {
+            const container = document.getElementById('balance-digits-container');
+            if (!container) return;
+
+            if (forceReset || container.children.length !== newString.length) {
+                container.innerHTML = '';
+                for (let i = 0; i < newString.length; i++) {
+                    const char = newString[i];
+                    const col = document.createElement('div');
+                    col.className = 'digit-col';
+
+                    const strip = document.createElement('div');
+                    strip.className = 'digit-strip';
+
+                    const itemCurrent = document.createElement('div');
+                    itemCurrent.className = 'digit-item current';
+                    itemCurrent.innerText = char;
+
+                    const itemNext = document.createElement('div');
+                    itemNext.className = 'digit-item next';
+                    itemNext.innerText = char;
+
+                    strip.appendChild(itemCurrent);
+                    strip.appendChild(itemNext);
+                    col.appendChild(strip);
+                    container.appendChild(col);
+                }
+                displayedString = newString;
+                return;
+            }
+
+            for (let i = 0; i < newString.length; i++) {
+                const oldChar = displayedString[i];
+                const newChar = newString[i];
+
+                if (oldChar !== newChar) {
+                    const col = container.children[i];
+                    if (!col) continue;
+
+                    const strip = col.querySelector('.digit-strip');
+                    const currentEl = strip.querySelector('.current');
+                    const nextEl = strip.querySelector('.next');
+
+                    nextEl.innerText = newChar;
+
+                    strip.style.transition = 'none';
+                    strip.style.transform = 'translateY(0px)';
+                    
+                    void strip.offsetHeight;
+
+                    strip.style.transition = 'transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+                    strip.style.transform = 'translateY(-24px)';
+
+                    setTimeout(() => {
+                        currentEl.innerText = newChar;
+                        strip.style.transition = 'none';
+                        strip.style.transform = 'translateY(0px)';
+                    }, 350);
+                }
+            }
+
+            displayedString = newString;
+        }
+
+        function setButtonsDisabledState(disabled) {
+            document.getElementById('spin-btn').disabled = disabled;
+            document.getElementById('btn-reset-session').disabled = disabled;
+            document.querySelectorAll('.btn-mult').forEach(btn => btn.disabled = disabled);
+            document.querySelectorAll('.btn-reel-opt').forEach(btn => btn.disabled = disabled);
+        }
+
+        function updateUI() {
+            updateBalanceDigits(balance.toFixed(2) + ' €');
+            
+            const currentCost = baseBet * currentMultiplier;
+            const spinBtn = document.getElementById('spin-btn');
+            const badge = document.getElementById('free-spin-badge');
+
+            document.getElementById('multiplier-title').innerText = `Moltiplicatore (Puntata Base ${baseBet}€)`;
+
+            if (freeSpins > 0) {
+                spinBtn.innerText = `SPIN GRATIS (${freeSpins})`;
+                spinBtn.classList.add('free');
+                badge.innerText = `${freeSpins} FREE`;
+                badge.classList.add('active');
+            } else {
+                spinBtn.innerText = `GIRA (${currentCost}€)`;
+                spinBtn.classList.remove('free');
+                badge.classList.remove('active');
+            }
+
+            if (isSpinning) {
+                setButtonsDisabledState(true);
+                return;
+            }
+
+            const canAffordCurrent = (freeSpins > 0 || balance >= currentCost);
+            spinBtn.disabled = !canAffordCurrent;
+            document.getElementById('btn-reset-session').disabled = false;
+            document.querySelectorAll('.btn-mult').forEach(btn => btn.disabled = false);
+            document.querySelectorAll('.btn-reel-opt').forEach(btn => btn.disabled = false);
+        }
+
+        function setMultiplier(mult) {
+            if (isSpinning) return;
+            currentMultiplier = mult;
+            document.querySelectorAll('.btn-mult').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`m-${mult}`).classList.add('active');
+            updateUI();
+        }
+
+        function toggleAutoSpin() {
+            isAutoSpin = !isAutoSpin;
+            const autoBtn = document.getElementById('auto-btn');
+
+            if (isAutoSpin) {
+                autoBtn.innerText = "AUTO: ON";
+                autoBtn.classList.add('active');
+                if (!isSpinning) startSpin();
+            } else {
+                autoBtn.innerText = "AUTO: OFF";
+                autoBtn.classList.remove('active');
+            }
+        }
+
+        function updateHistory(symbols, winAmount) {
+            if (symbols.length > 0) {
+                history.unshift({ symbols, winAmount });
+                if (history.length > 5) history.pop();
+            }
+
+            const container = document.getElementById('history-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            for (let i = 0; i < 5; i++) {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+
+                if (history[i]) {
+                    const syms = history[i].symbols;
+                    const win = history[i].winAmount;
+                    const winText = win > 0 ? `+${win.toFixed(2)}€` : `0.00€`;
+                    const winClass = win > 0 ? 'history-win positive' : 'history-win';
+
+                    let fontSize = '0.9rem';
+                    if (syms.length === 6) fontSize = '0.85rem';
+                    if (syms.length === 10) fontSize = '0.78rem';
+
+                    const symbolsHTML = syms.map(s => `<span>${s}</span>`).join('');
+
+                    item.innerHTML = `
+                        <div class="history-symbols" style="font-size: ${fontSize}">
+                            ${symbolsHTML}
+                        </div>
+                        <span class="${winClass}">${winText}</span>
+                    `;
+                } else {
+                    item.innerHTML = `<span class="history-symbols">- - -</span><span class="history-win">-</span>`;
+                }
+                container.appendChild(item);
+            }
+        }
+
+        function getMaxAdjacentSequence(arr) {
+            let maxCount = 0;
+            let bestSymbol = null;
+            let bestIndices = [];
+            let currentSymbol = null;
+            let currentIndices = [];
+
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] === currentSymbol) {
+                    currentIndices.push(i);
+                } else {
+                    currentSymbol = arr[i];
+                    currentIndices = [i];
+                }
+
+                if (currentIndices.length > maxCount) {
+                    maxCount = currentIndices.length;
+                    bestSymbol = currentSymbol;
+                    bestIndices = [...currentIndices];
+                }
+            }
+
+            return { symbol: bestSymbol, count: maxCount, indices: bestIndices };
+        }
+
+        function evaluateResult(results) {
+            const banner = document.getElementById('result-banner');
+            banner.className = 'result-banner';
+
+            const currentCost = baseBet * currentMultiplier;
+            let winAmount = 0;
+
+            const { symbol, count, indices } = getMaxAdjacentSequence(results);
+
+            let isJackpot = false;
+            let isBaseWin = false;
+
+            if (activeReelsCount === 3) {
+                if (count === 3) isJackpot = true;
+                else if (count === 2) isBaseWin = true;
+            } else if (activeReelsCount === 6) {
+                if (count === 6) isJackpot = true;
+                else if (count >= 3) isBaseWin = true;
+            } else if (activeReelsCount === 10) {
+                if (count === 10) isJackpot = true;
+                else if (count >= 5) isBaseWin = true;
+            }
+
+            totalSpins++;
+            let newBalance = balance;
+
+            if (isJackpot) {
+                const mult = PAYTABLE[symbol].jackpot;
+                winAmount = currentCost * mult;
+                newBalance += winAmount;
+                totalWinsCount++;
+
+                let msg = `🎉 JACKPOT! Tutti i ${activeReelsCount} rulli con ${symbol} - Vinci ${winAmount.toFixed(2)}€!`;
+
+                if (PAYTABLE[symbol].freeSpin) {
+                    freeSpins += 1;
+                    msg += ` +1 SPIN GRATIS!`;
+                }
+
+                banner.innerText = msg;
+                banner.classList.add('jackpot');
+
+                for (let i = 1; i <= activeReelsCount; i++) {
+                    document.getElementById(`reel-window-${i}`).classList.add('jackpot-highlight');
+                }
+
+            } else if (isBaseWin) {
+                const mult = PAYTABLE[symbol].base;
+                winAmount = currentCost * mult;
+                newBalance += winAmount;
+                totalWinsCount++;
+
+                banner.innerText = `✨ ${count}x ${symbol} adiacenti! Vinci ${winAmount.toFixed(2)}€`;
+                banner.classList.add('win');
+
+                indices.forEach(index => {
+                    document.getElementById(`reel-window-${index + 1}`).classList.add('win-highlight');
+                });
+
+            } else {
+                banner.innerText = "Nessuna combinazione vincente.";
+            }
+
+            if (winAmount > maxWin) maxWin = winAmount;
+
+            const nextSpinCount = userSpinsCount + 1;
+            syncUserData(newBalance, nextSpinCount);
+
+            document.getElementById('stat-spins').innerText = totalSpins;
+            document.getElementById('stat-max-win').innerText = `${maxWin.toFixed(2)} €`;
+            document.getElementById('stat-winrate').innerText = `${((totalWinsCount / totalSpins) * 100).toFixed(1)} %`;
+
+            balanceHistory.push(balance);
+            updateChart();
+            updateHistory(results, winAmount);
+            updateUI();
+        }
+
+        function generateRandomResults() {
+            const results = [];
+            for (let i = 0; i < activeReelsCount; i++) {
+                results.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+            }
+            return results;
+        }
+
+        function startSpin() {
+            if (isSpinning) return;
+
+            const currentCost = baseBet * currentMultiplier;
+
+            if (freeSpins > 0) {
+                freeSpins -= 1;
+            } else if (balance >= currentCost) {
+                syncUserData(balance - currentCost, userSpinsCount);
+            } else {
+                document.getElementById('result-banner').innerText = "Saldo insufficiente per girare!";
+                isAutoSpin = false;
+                const autoBtn = document.getElementById('auto-btn');
+                autoBtn.innerText = "AUTO: OFF";
+                autoBtn.classList.remove('active');
+                return;
+            }
+
+            isSpinning = true;
+            clearReelHighlights();
+            setButtonsDisabledState(true);
+            updateUI();
+
+            const banner = document.getElementById('result-banner');
+            banner.className = 'result-banner';
+            banner.innerText = "I rulli stanno girando...";
+
+            const targetResults = generateRandomResults();
+            let completedReels = 0;
+
+            for (let i = 1; i <= activeReelsCount; i++) {
+                const duration = 1200 + (i * 200);
+
+                spinSingleReel(i, targetResults[i - 1], duration, () => {
+                    completedReels++;
+                    if (completedReels === activeReelsCount) {
+                        isSpinning = false;
+                        setButtonsDisabledState(false);
+                        evaluateResult(targetResults);
+
+                        if (isAutoSpin) {
+                            setTimeout(() => startSpin(), 1000);
+                        }
+                    }
+                });
+            }
+        }
+
+        function spinSingleReel(reelId, targetSymbol, duration, onComplete) {
+            const reel = document.getElementById(`reel-${reelId}`);
+            if (!reel) return;
+            
+            const totalSymbols = 30;
+            const stripSymbols = [];
+            
+            for (let i = 0; i < totalSymbols - 1; i++) {
+                stripSymbols.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+            }
+            stripSymbols.push(targetSymbol);
+
+            reel.innerHTML = '';
+            stripSymbols.forEach(sym => {
+                const div = document.createElement('div');
+                div.className = 'reel-symbol';
+                div.innerText = sym;
+                reel.appendChild(div);
+            });
+
+            const totalDistance = (totalSymbols - 1) * SYMBOL_HEIGHT;
+            let startTime = null;
+
+            function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentY = -(easeOut * totalDistance);
+                reel.style.transform = `translateY(${currentY}px)`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    reel.style.transform = `translateY(-${totalDistance}px)`;
+                    onComplete();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initUserSession();
+            initReels();
+            startTimer();
+            updateChart();
+        });
+    </script>
+</body>
+</html>

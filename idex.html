@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>We Need A Casino - Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="header-nav">
+        <div class="brand-title">We Need A Casino</div>
+        <div id="user-header-bar" class="user-badge hidden">
+            <span id="user-display-name">👤 -</span>
+            <span id="user-balance-display" style="margin-left: 10px; color: var(--accent-gold);">0.00 €</span>
+            <button class="btn-back-hub" onclick="logoutUser()" style="margin-left: 15px; padding: 4px 10px;">Esci</button>
+        </div>
+    </div>
+
+    <!-- FORM AUTENTICAZIONE -->
+    <div id="auth-modal" class="auth-container">
+        <h2 id="auth-title">Accedi</h2>
+        <form class="auth-form" onsubmit="handleAuthSubmit(event)">
+            <input type="text" id="auth-username" placeholder="Nickname" required />
+            <input type="password" id="auth-password" placeholder="Password" required />
+            <button type="submit" id="auth-submit-btn" class="btn-primary">Accedi</button>
+        </form>
+        <div class="auth-toggle">
+            <span id="auth-toggle-text">Non hai un account? <span onclick="toggleAuthMode()">Registrati</span></span>
+        </div>
+        <p id="auth-error" class="error-msg"></p>
+    </div>
+
+    <!-- MAIN HUB CONTENT -->
+    <div id="main-hub" class="main-wrapper hidden" style="width: 100%; max-width: 1200px;">
+        <div class="side-column" style="flex: 1;">
+            <div class="paytable-container">
+                <div class="widget-title">
+                    <span>Giochi Disponibili</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 10px;">
+                    <!-- SLOT MACHINE CARD -->
+                    <div class="paytable-row" style="display: flex; flex-direction: column; align-items: center; padding: 20px; gap: 12px; text-align: center;">
+                        <div style="font-size: 3rem;">🎰</div>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Slot Machine</div>
+                        <button class="btn-spin" style="width: 100%; padding: 10px; font-size: 0.9rem;" onclick="launchGame('SPIN.html', 'Slot Machine')">GIOCA ORA</button>
+                    </div>
+
+                    <!-- PROSSIMO GIOCO -->
+                    <div class="paytable-row" style="display: flex; flex-direction: column; align-items: center; padding: 20px; gap: 12px; text-align: center; opacity: 0.5;">
+                        <div style="font-size: 3rem;">🃏</div>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Prossimo Gioco</div>
+                        <span class="paytable-badge-effect" style="margin: 0;">In Arrivo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR CLASSIFICA -->
+        <div class="side-column">
+            <div class="paytable-container">
+                <div class="widget-title">
+                    <span>🏆 I più ricchi</span>
+                </div>
+                <div id="leaderboard-list" class="paytable-list" style="margin-top: 5px;">
+                    <!-- Popolato da JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY CARICAMENTO -->
+    <div id="loaderOverlay" class="loader-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Avvio Slot Machine in corso...</div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://utbwqhtaiiexhxxwcjbh.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0YndxaHRhaWlleGh4eHdjamJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTU2ODEsImV4cCI6MjEwNDUzMTY4MX0.BRYmOwZ5k5imIymado1JPNRcHdvpmvmkhkXcU-OwbMs";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let isRegisterMode = false;
+
+        function generateSessionToken() {
+            return 'token_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const sessionToken = localStorage.getItem('arcade_session');
+            if (sessionToken) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('utenti')
+                        .select('*')
+                        .eq('session_token', sessionToken)
+                        .maybeSingle();
+
+                    if (!error && data) {
+                        currentUser = data;
+                        showHub();
+                    } else {
+                        localStorage.removeItem('arcade_session');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('arcade_session');
+                }
+            }
+        });
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? "Registrati" : "Accedi";
+            document.getElementById('auth-submit-btn').innerText = isRegisterMode ? "Registrati" : "Accedi";
+            document.getElementById('auth-toggle-text').innerHTML = isRegisterMode 
+                ? 'Hai già un account? <span onclick="toggleAuthMode()">Accedi</span>'
+                : 'Non hai un account? <span onclick="toggleAuthMode()">Registrati</span>';
+            document.getElementById('auth-error').innerText = "";
+        }
+
+        function handleAuthSubmit(event) {
+            event.preventDefault();
+            if (isRegisterMode) registerUser(); else loginUser();
+        }
+
+        async function loginUser() {
+            const usernameInput = document.getElementById('auth-username').value.trim();
+            const passwordInput = document.getElementById('auth-password').value.trim();
+            const errorEl = document.getElementById('auth-error');
+
+            errorEl.innerText = "Accesso in corso...";
+
+            const { data, error } = await supabaseClient
+                .from('utenti')
+                .select('*')
+                .eq('username', usernameInput)
+                .eq('password', passwordInput);
+
+            if (error || !data || data.length === 0) {
+                errorEl.innerText = "Credenziali errate o utente non trovato.";
+                return;
+            }
+
+            const user = data[0];
+            const sessionToken = generateSessionToken();
+
+            await supabaseClient.from('utenti').update({ session_token: sessionToken }).eq('username', user.username);
+
+            user.session_token = sessionToken;
+            currentUser = user;
+            localStorage.setItem('arcade_session', sessionToken);
+            errorEl.innerText = "";
+            showHub();
+        }
+
+        async function registerUser() {
+            const usernameInput = document.getElementById('auth-username').value.trim();
+            const passwordInput = document.getElementById('auth-password').value.trim();
+            const errorEl = document.getElementById('auth-error');
+
+            errorEl.innerText = "Registrazione in corso...";
+            const sessionToken = generateSessionToken();
+
+            const { data, error } = await supabaseClient
+                .from('utenti')
+                .insert([{ username: usernameInput, password: passwordInput, saldo: 100, spin: 0, ruolo: 'giocatore', session_token: sessionToken }])
+                .select();
+
+            if (error) {
+                errorEl.innerText = "Errore: " + error.message;
+                return;
+            }
+
+            if (data && data.length > 0) {
+                currentUser = data[0];
+                localStorage.setItem('arcade_session', sessionToken);
+                errorEl.innerText = "";
+                showHub();
+            }
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('arcade_session');
+            currentUser = null;
+            document.getElementById('main-hub').classList.add('hidden');
+            document.getElementById('user-header-bar').classList.add('hidden');
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function showHub() {
+            document.getElementById('auth-modal').classList.add('hidden');
+            document.getElementById('user-header-bar').classList.remove('hidden');
+            document.getElementById('main-hub').classList.remove('hidden');
+            loadUserData();
+        }
+
+        async function loadUserData() {
+            if (!currentUser || !currentUser.username) return;
+
+            const { data: updatedUser } = await supabaseClient
+                .from('utenti')
+                .select('*')
+                .eq('username', currentUser.username)
+                .maybeSingle();
+
+            if (updatedUser) currentUser = updatedUser;
+
+            document.getElementById('user-display-name').innerText = `👤 ${currentUser.username}`;
+            document.getElementById('user-balance-display').innerText = `${parseFloat(currentUser.saldo || 0).toFixed(2)} €`;
+
+            const { data: topUsers } = await supabaseClient
+                .from('utenti')
+                .select('*')
+                .order('saldo', { ascending: false })
+                .limit(10);
+
+            if (topUsers) {
+                const list = document.getElementById('leaderboard-list');
+                list.innerHTML = '';
+                topUsers.forEach((u, i) => {
+                    list.innerHTML += `
+                        <div class="paytable-row" style="grid-template-columns: 30px 1fr auto;">
+                            <span style="color: var(--accent-gold); font-weight: 800;">#${i + 1}</span>
+                            <span style="font-weight: 700;">${u.username}</span>
+                            <span style="color: var(--accent-green); font-weight: 800;">${parseFloat(u.saldo || 0).toFixed(2)} €</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function launchGame(page, gameName) {
+            document.getElementById('loadingText').innerText = `Avvio ${gameName} in corso...`;
+            document.getElementById('loaderOverlay').style.display = 'flex';
+            setTimeout(() => { window.location.href = page; }, 1000);
+        }
+    </script>
+</body>
+</html>
