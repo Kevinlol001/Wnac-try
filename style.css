@@ -185,7 +185,7 @@ body {
 
 .reels-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
 }
 
@@ -290,28 +290,6 @@ body {
     width: 100%;
     height: 70px;
     overflow: visible;
-}
-
-.btn-reset-session {
-    background-color: rgba(52, 152, 219, 0.1);
-    border: 1px solid rgba(52, 152, 219, 0.4);
-    color: var(--accent-blue);
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-}
-
-.btn-reset-session:hover {
-    background-color: rgba(52, 152, 219, 0.25);
-}
-
-.btn-reset-session:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
 }
 
 .slot-container {

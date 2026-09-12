@@ -15,6 +15,7 @@
     </div>
 
     <div class="main-wrapper">
+        <!-- COLONNA SINISTRA -->
         <div class="side-column">
             <div class="paytable-container">
                 <div class="widget-title">
@@ -97,29 +98,9 @@
                     </div>
                 </div>
             </div>
-
-            <div class="reels-selector-container">
-                <div class="widget-title">
-                    <span>Modalità Rulli</span>
-                    <span style="font-size: 0.7rem; color: #888888; font-weight: normal;">Puntata</span>
-                </div>
-                <div class="reels-grid">
-                    <button class="btn-reel-opt active" id="reel-opt-3" onclick="setReelCount(3)">
-                        3 RULLI
-                        <span class="subtext">Base 10€</span>
-                    </button>
-                    <button class="btn-reel-opt" id="reel-opt-6" onclick="setReelCount(6)">
-                        6 RULLI
-                        <span class="subtext">Base 20€</span>
-                    </button>
-                    <button class="btn-reel-opt" id="reel-opt-10" onclick="setReelCount(10)">
-                        10 RULLI
-                        <span class="subtext">Base 50€</span>
-                    </button>
-                </div>
-            </div>
         </div>
 
+        <!-- AREA CENTRALE SLOT MACHINE -->
         <div class="slot-container">
             <div class="stats-box">
                 <div class="stat-item-balance">
@@ -156,13 +137,13 @@
                     <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
                     <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
                     <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
-                    <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
-                    <div class="history-item"><span class="history-symbols">- - -</span><span class="history-win">-</span></div>
                 </div>
             </div>
         </div>
 
+        <!-- COLONNA DESTRA -->
         <div class="side-column">
+            <!-- STATISTICHE -->
             <div class="stats-panel-container">
                 <div class="widget-title">
                     <span>📊 Statistiche</span>
@@ -197,10 +178,24 @@
                         <polyline fill="none" stroke="#2ecc71" stroke-width="2" points="0,35 280,35" id="chart-polyline"/>
                     </svg>
                 </div>
+            </div>
 
-                <button class="btn-reset-session" onclick="resetSession()" id="btn-reset-session">
-                    🔄 RESET SESSIONE
-                </button>
+            <!-- MODALITÀ RULLI -->
+            <div class="reels-selector-container">
+                <div class="widget-title">
+                    <span>Modalità Rulli</span>
+                    <span style="font-size: 0.7rem; color: #888888; font-weight: normal;">Puntata</span>
+                </div>
+                <div class="reels-grid">
+                    <button class="btn-reel-opt active" id="reel-opt-3" onclick="setReelCount(3)">
+                        3 RULLI
+                        <span class="subtext">Base 10€</span>
+                    </button>
+                    <button class="btn-reel-opt" id="reel-opt-6" onclick="setReelCount(6)">
+                        6 RULLI
+                        <span class="subtext">Base 20€</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -358,41 +353,12 @@
             });
         }
 
-        function resetSession() {
-            if (isSpinning) return;
-
-            freeSpins = 0;
-            totalSpins = 0;
-            totalWinsCount = 0;
-            maxWin = 0;
-            sessionSeconds = 0;
-            history = [];
-            balanceHistory = [balance];
-
-            if (isAutoSpin) toggleAutoSpin();
-
-            document.getElementById('stat-spins').innerText = '0';
-            document.getElementById('stat-max-win').innerText = '0.00 €';
-            document.getElementById('stat-winrate').innerText = '0.0 %';
-            
-            const resultBanner = document.getElementById('result-banner');
-            resultBanner.innerText = "Sessione resettata! Buona fortuna!";
-            resultBanner.className = "result-banner";
-
-            clearReelHighlights();
-            updateHistory([], 0);
-            updateBalanceDigits(balance.toFixed(2) + ' €', true);
-            updateChart();
-            updateUI();
-        }
-
         function setReelCount(count) {
             if (isSpinning) return;
 
             activeReelsCount = count;
             if (count === 3) baseBet = 10;
             else if (count === 6) baseBet = 20;
-            else if (count === 10) baseBet = 50;
 
             document.querySelectorAll('.btn-reel-opt').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`reel-opt-${count}`).classList.add('active');
@@ -503,7 +469,6 @@
 
         function setButtonsDisabledState(disabled) {
             document.getElementById('spin-btn').disabled = disabled;
-            document.getElementById('btn-reset-session').disabled = disabled;
             document.querySelectorAll('.btn-mult').forEach(btn => btn.disabled = disabled);
             document.querySelectorAll('.btn-reel-opt').forEach(btn => btn.disabled = disabled);
         }
@@ -535,7 +500,6 @@
 
             const canAffordCurrent = (freeSpins > 0 || balance >= currentCost);
             spinBtn.disabled = !canAffordCurrent;
-            document.getElementById('btn-reset-session').disabled = false;
             document.querySelectorAll('.btn-mult').forEach(btn => btn.disabled = false);
             document.querySelectorAll('.btn-reel-opt').forEach(btn => btn.disabled = false);
         }
@@ -565,14 +529,14 @@
         function updateHistory(symbols, winAmount) {
             if (symbols.length > 0) {
                 history.unshift({ symbols, winAmount });
-                if (history.length > 5) history.pop();
+                if (history.length > 3) history.pop();
             }
 
             const container = document.getElementById('history-list');
             if (!container) return;
             container.innerHTML = '';
 
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 3; i++) {
                 const item = document.createElement('div');
                 item.className = 'history-item';
 
@@ -584,7 +548,6 @@
 
                     let fontSize = '0.9rem';
                     if (syms.length === 6) fontSize = '0.85rem';
-                    if (syms.length === 10) fontSize = '0.78rem';
 
                     const symbolsHTML = syms.map(s => `<span>${s}</span>`).join('');
 
@@ -644,9 +607,6 @@
             } else if (activeReelsCount === 6) {
                 if (count === 6) isJackpot = true;
                 else if (count >= 3) isBaseWin = true;
-            } else if (activeReelsCount === 10) {
-                if (count === 10) isJackpot = true;
-                else if (count >= 5) isBaseWin = true;
             }
 
             totalSpins++;
