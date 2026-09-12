@@ -231,7 +231,6 @@
         let balanceHistory = [];
 
         const SYMBOLS = ['🍒', '🍋', '🍇', '🔔', '⭐', '💎'];
-        const SYMBOL_HEIGHT = 100;
 
         const PAYTABLE = {
             '🍒': { base: 1.2, jackpot: 8 },
@@ -241,6 +240,13 @@
             '⭐': { base: 5.0, jackpot: 200 },
             '💎': { base: 10.0, jackpot: 1000, freeSpin: true }
         };
+
+        function getSymbolHeight() {
+            if (activeReelsCount === 6) {
+                return window.innerWidth <= 600 ? 55 : 70;
+            }
+            return 100;
+        }
 
         async function initUserSession() {
             const sessionToken = localStorage.getItem('arcade_session');
@@ -398,6 +404,12 @@
         function initReels() {
             const display = document.getElementById('slot-display');
             if (!display) return;
+
+            display.className = 'slot-display';
+            if (activeReelsCount === 6) {
+                display.classList.add('reels-6');
+            }
+
             display.innerHTML = '';
 
             for (let id = 1; id <= activeReelsCount; id++) {
@@ -752,6 +764,7 @@
             const reel = document.getElementById(`reel-${reelId}`);
             if (!reel) return;
             
+            const currentSymbolHeight = getSymbolHeight();
             const totalSymbols = 30;
             const stripSymbols = [];
             
@@ -768,7 +781,7 @@
                 reel.appendChild(div);
             });
 
-            const totalDistance = (totalSymbols - 1) * SYMBOL_HEIGHT;
+            const totalDistance = (totalSymbols - 1) * currentSymbolHeight;
             let startTime = null;
 
             function animate(currentTime) {
